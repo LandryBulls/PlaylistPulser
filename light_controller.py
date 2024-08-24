@@ -20,7 +20,16 @@ def load_json(json_file):
         loaded = json.load(f)
     return loaded
 
-def fft_to_dmx(fft_data, mapping):
+def load_profile(profile):
+    controller = OpenDMXController()
+    for light in profile['lights']:
+        if light['type'] == 'dimmer':
+            controller.add_fixture(Dimmer(name=light['name']))
+        elif light['type'] == 'custom':
+            controller.add_light(Custom(name=light['name'], n_channels=light['channels']))
+    return controller
+
+def fft_to_dmx(fft_data, scene_mapping):
     # Apply mapping to fft_data
     # Return DMX values as a dict of light identities and values
     pass

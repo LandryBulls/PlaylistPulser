@@ -1,40 +1,40 @@
 
 {
-    "TEMPLATE": {
-        "BASS_RANGE": [20, 500],
-        "BASS_MAX": 35,
-        "BASS_MAX_THRESHOLD": 20,
-        "BASS_MIN_THRESHOLD": 2,
-        "MIN_BASS_BRIGHTNESS": 0,
-        "MAX_BASS_BRIGHTNESS": 75,
-        "BASS_MAP": "ropes",
-        "MID_RANGE": [350, 2000],
-        "MID_THRESH": 0.03,
-        "HIGH_RANGE": [2000, 16000],
-        "HIGH_THRESH": 1,
-        "HIGH_MAP": "strobe_intensity",
-        "STROBE_ENABLED": true,
-        "STROBE_SPEED": 255,
-        "DISCOBALL_ENABLED": true,
-        "LASERS_ENABLED": true,
-        "LAMP_ENABLED": true,
-        "RGB_ENABLED": true,
-        "RGB_MAX": 255,
-        "RGB_MIN": 0,
-        "RGB_THRESH": 1,
-        "RGB_MODE": 0,
-        "RGB_COLOR": "pink",
-        "RGB_STROBE_TRIGGER": 1,
-        "RGB_STROBE_SPEED": 255,
-        "RGB_STROBE_INTENSITY": 255,
-        "RGB_STROBE_ENABLED": false,
-        "RGB_STROBE_MODE": 0
-    },
-    "DUBSTEP": {
-        "BASS_RANGE": [20, 500],
-        "BASS_MAX": 35,
-        "BASS_MAX_THRESHOLD": 20,
-    }
-}
+        'name': 'default',
+        'description': 'Default scene. Nice baseline for testing or starting a new scene.'
 
-## AND SO ON
+        // below define the unique lights that will be used in this scene. they can be static or dynamic. The order of the lights is important.
+        'lights': [
+            {
+                'name': 'ropes'
+                'input': {
+                    'type': 'fft_range_sum',
+                    'range': [0, 1000],
+                    'brightness_range': [0, 255],
+                    'color': 'random', 
+                    'strobe': true, 
+                }'
+
+            },
+            {
+                'name': 'disco_ball',
+
+            },
+            {
+                'name': 'lasers',
+
+            },
+            {
+                'name': 'lamp',
+
+            },
+            {
+                'name': 'strobe',
+
+            },
+            {
+                'name': 'rgb',
+
+            }
+        ]
+}
