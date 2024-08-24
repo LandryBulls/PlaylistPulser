@@ -1,28 +1,28 @@
-// This is a scene
 {
         "name": "default",
-        "description": "Default scene. Nice baseline for testing or starting a new scene.",
+        "description": "Default. Nice baseline for testing or starting a new scene.",
+        "type": "dynamic",
 
-        // below define the unique lights that will be used in this scene. they can be static or dynamic. The order of the lights is important.
         "lights": [
                 {
                         "name": "ropes",
                         "type": "dimmer",
+                        "modulator": "fft",
                         "frequency_range": [0, 1000],
                         "brightness_range": [0, 255],
-                        "power_range": [1, 10]
+                        "power_range": [0.03, 1]
                 },
                 {
                         "name": "disco_ball",
-                        "type": "dimmer",
-                        "frequency_range": [0, 1000],
-                        "brightness_range": [0, 255],
-                        "power_range": [1, 10]
+                        "type": "dimmmer",
+                        "modulator": "static",
+                        "brightness": 255
                 },
                 {
                         "name": "lasers",
                         "type": "dimmer",
-                        
+                        "modulator": "bool",
+
                 },
                 {
                         "name": "lamp"

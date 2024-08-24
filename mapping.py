@@ -30,7 +30,7 @@ def random_color():
     """
     return np.random.choice(list(colors.keys()))
 
-def RGB(brightness=255, color='pink', strobe=False, strobe_speed=255):
+def generate_RGB_signal(brightness=255, color='pink', strobe=False, strobe_speed=255):
     """
     Returns the list of 7 DMX values for the RGB light
     """
@@ -38,7 +38,11 @@ def RGB(brightness=255, color='pink', strobe=False, strobe_speed=255):
         strobe_val = 255
     else:
         strobe_val = 0
-    return [brightness, colors[color][0], colors[color][1], colors[color][2], strobe_val, 0, 0]
+    if color == 'random':
+        color = random_color()
+    else:
+        color = colors[color]
+    return [brightness, colors[0], colors[1], colors[2], strobe_val, 0, 0]
 
 def freq_to_index(freq):
     return int(round(freq * BLOCKSIZE / SAMPLERATE)) # This converts a frequency to an index in the FFT vector
@@ -64,7 +68,7 @@ def power_to_brightness(power, lower_threshold, upper_threshold, min_brightness=
     else:
         return int((power - lower_threshold) / (upper_threshold - lower_threshold) * (max_brightness - min_brightness) + min_brightness)
 
-def fft_to_rgb(fft_vec, range, lower_threshold=1.0, upper_threshold=15.0, min_brightness=0, max_brightness=255, color='random', strobe=False):
+def fft_to_rgb(fft_vec, frange=[0,2000], prange=[1.0, 15.0], brange=[0,255], color='random', strobe=False):
     """
     Converts an FFT vector to a set of DMX values to activate an RGB fixture. 
 
@@ -81,18 +85,18 @@ def fft_to_rgb(fft_vec, range, lower_threshold=1.0, upper_threshold=15.0, min_br
     int: The DMX value(s) to be sent to a given fixture. 
     """
 
-    freq_low, freq_high = freq_to_index(range[0]), freq_to_index(range[1])
+    freq_low, freq_high = freq_to_index(frange[0]), freq_to_index(frange[1])
     fft_sum = np.sum(fft_vec[freq_low:freq_high])
-    brightness = power_to_brightness(fft_sum, lower_threshold, upper_threshold, min_brightness, max_brightness)
+    brightness = power_to_brightness(fft_sum, prange[0], prange[1], brange[0], brange[1])
 
     if color == 'random':
         color = random_color()
     else:
         color = colors[color]
 
-    return RGB(brightness=brightness, color=color, strobe=strobe)
+    return generate_RGB_signal(brightness=brightness, color=color, strobe=strobe)
 
-def fft_to_dimmer(fft_vec, range, lower_threshold=0.5, upper_threshold=1.0, min_brightness=0, max_brightness=255):
+def fft_to_dimmer(fft_vec, frange, prange=[0.5,1.0], brange=[0,255]):
     """
     Converts an FFT vector to a dimmer value based on the sum of the FFT vector in a given range.
 
@@ -108,15 +112,16 @@ def fft_to_dimmer(fft_vec, range, lower_threshold=0.5, upper_threshold=1.0, min_
     int: The DMX value to be sent to a given dimmer. 
     """
 
-    freq_low, freq_high = freq_to_index(range[0]), freq_to_index(range[1])
+    freq_low, freq_high = freq_to_index(frange[0]), freq_to_index(frange[1])
     fft_sum = np.sum(fft_vec[freq_low:freq_high])
-    brightness = power_to_brightness(fft_sum, lower_threshold, upper_threshold, min_brightness, max_brightness)
+    brightness = power_to_brightness(fft_sum, prange[0], prange[1], brange[0], brange[1])
 
     return brightness   
 
-def fft_to_strobe(fft_vec, range, lower_threshold=0.5, upper_threshold=1.0, min_brightness=0, max_brightness=255):
+def fft_to_strobe(fft_vec, frange, lower_threshold=0.5):
     """
     Converts an FFT vector to a strobe value based on the sum of the FFT vector in a given range.
+    For now, just returns the brightness value and whether to turn it on or off (255 or 0)
 
     Parameters:
     fft_vec (np.array): The FFT vector to convert to a DMX value.
@@ -130,12 +135,11 @@ def fft_to_strobe(fft_vec, range, lower_threshold=0.5, upper_threshold=1.0, min_
     int: The DMX value to be sent to a given dimmer. 
     """
 
-    freq_low, freq_high = freq_to_index(range[0]), freq_to_index(range[1])
+    freq_low, freq_high = freq_to_index(frange[0]), freq_to_index(frange[1])
     fft_sum = np.sum(fft_vec[freq_low:freq_high])
-    
-
-
-    return brightness
-
+    if fft_sum >= lower_threshold:
+        return (255, 255)
+    else:
+        return (0, 0)
     
 

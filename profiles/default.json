@@ -1,37 +1,36 @@
-// This is a profile. 
-
 {
-    'name': 'default',
-    'description': 'Default profile. This works as the template lighting profile for running tests.'
-    'lights': [
+    "name": "default",
+    "description": "Default profile. This works as the template lighting profile for running tests.",
+    "lights": [
         {
-            'name': 'ropes',
-            'type': 'dimmer',
-            'n_channels': 1
+            "name": "ropes",
+            "type": "dimmer",
+            "n_channels": 1
         },
         {
-            'name': 'disco_ball',
-            'type': 'dimmer',
-            'n_channels': 1
+            "name": "disco_ball",
+            "type": "dimmer",
+            "n_channels": 1
         },
         {
-            'name': 'lasers',
-            'type': 'dimmer',
-            'n_channels': 1
+            "name": "lasers",
+            "type": "dimmer",
+            "n_channels": 1
         },
         {
-            'name': 'lamp',
-            'type': 'dimmer',
-            'n_channels': 1
+            "name": "lamp",
+            "type": "dimmer",
+            "n_channels": 1
         },
         {
-            'name': 'strobe',
-            'type': 'dimmer',
-            'n_channels': 2
+            "name": "strobe",
+            "type": "strobe",
+            "n_channels": 2
         },
         {
-            'name': 'rgb',
-            'type': 'rgb',
-            'n_channels': 7
+            "name": "rgb",
+            "type": "rgb",
+            "n_channels": 7
         }
+    ]
 }

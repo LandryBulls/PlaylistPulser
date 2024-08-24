@@ -1,0 +1,27 @@
+{
+    "name": "testing",
+    "description": "Testing scene. This works as the template scene for running tests with two rgbs.",
+    "type": "dynamic",
+
+    "lights": [
+        {
+            "name": "rgb1",
+            "type": "rgb",
+            "modulator": "fft",
+            "frequency_range": [350, 2000],
+            "brightness_range": [30, 255],
+            "power_range": [0.03, 1],
+            "color": "blue",
+            "strobe": false
+        },
+        {
+            "name": "rgb2",
+            "type": "rgb",
+            "modulator": "static",
+            "brightness": 255,
+            "color": "red",
+            "strobe": true
+        }
+    ]
+
+}

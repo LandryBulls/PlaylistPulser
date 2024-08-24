@@ -8,20 +8,18 @@ Author: Landry Bulls
 Date: 8/20/24
 """
 
-import pandas as pd
-import sounddevice as sd
 from PyDMXControl.controllers import OpenDMXController
 from PyDMXControl.profiles.Generic import Dimmer, Custom
+from custom_profiles.RGB import RGB
+from custom_profiles.ADJ_strobe import Strobe
 import threading
 import queue
 import os
 import json
-from mapping import fft_to_rgb, power_to_brightness
-
-def load_json(json_file):
-    with open(json_file, 'r') as f:
-        loaded = json.load(f)
-    return loaded
+from mapping import fft_to_rgb, fft_to_strobe, fft_to_dimmer, generate_RGB_signal
+from audio_listener import AudioListener
+from scene_manager import SceneManager
+from utils import load_json 
 
 def load_profile(profile_name):
     with open(f'profiles/{profile_name}.json', 'r') as f:
@@ -30,85 +28,102 @@ def load_profile(profile_name):
 
 def load_controller(profile):
     controller = OpenDMXController()
+    control_dict = {}
+    curr_channel = 1
     for light in profile['lights']:
         if light['type'] == 'dimmer':
-            controller.add_fixture(Dimmer(name=light['name']))
-        elif light['type'] == 'custom':
-            controller.add_light(Custom(name=light['name'], n_channels=light['channels']))
-    return controller
+            control_dict[light['name']] = controller.add_fixture(Dimmer(name=light['name'], start_channel=curr_channel))
+            curr_channel += 1
+        elif light['type'] == 'rgb':
+            control_dict[light['name']] = controller.add_fixture(RGB(name=light['name'], start_channel=curr_channel))
+            curr_channel += 6
+        elif light['type'] == 'strobe':
+            control_dict[light['name']] = controller.add_fixture(Strobe(name=light['name'], start_channel=curr_channel))
+            curr_channel += 2
 
-class SceneManager:
-    def __init__(self, scenes_directory, profile_name):
-        self.scenes = self.load_json_files(scenes_directory)
-        self.current_scene = None
-
-    def load_json_files(self, directory):
-        data = {}
-        for filename in os.listdir(directory):
-            if filename.endswith('.json'):
-                with open(os.path.join(directory, filename), 'r') as file:
-                    data[filename[:-5]] = json.load(file)
-        return data
-
-    def set_scene(self, scene_name):
-        if scene_name in self.scenes:
-            self.current_scene = self.scenes[scene_name]
-        else:
-            raise ValueError(f"Scene '{scene_name}' not found")
+    return controller, control_dict
 
 class LightController(threading.Thread):
     def __init__(self, audio_listener, profile_name, scene_manager):
         threading.Thread.__init__(self)
         self.audio_listener = audio_listener
         self.profile = load_profile(profile_name)
-        self.dmx_controller = load_controller(self.profile)
+        self.light_names = [i['name'] for i in self.profile['lights']]
+        self.dmx_controller, self.controller_dict = load_controller(self.profile)
         self.scene_manager = scene_manager
         self.running = threading.Event()
+
+    def change_scene(self, scene_name):
+        self.scene_manager.set_scene(scene_name)
 
     def run(self):
         self.running.set()
         while self.running.is_set():
-            fft_data = self.audio_listener.get_fft_data(timeout=0.1)
-            if fft_data is not None:
-                dmx_values = self.process_fft(fft_data)
-                self.dmx_controller.set_channels(dmx_values) # will need to interrogate this further. not sure what to pass to set_channels. 
+            if self.scene_manager.current_scene['type'] == 'dynamic':
+                fft_data = self.audio_listener.get_fft_data(timeout=0.1)
+                if fft_data is not None:
+                    try:
+                        self.send_dynamic(fft_data)
+                    except Exception as e:
+                        print(f"Error sending dynamic data: {str(e)}")
+            else:
+                self.send_static()
             
-            self.check_scene_updates()
-
-    def process_fft(self, fft_data):
-        dmx_values = {}
-        scene = self.scene_manager.current_scene
-
-        for light in scene['lights']:
-            if light['name'] in self.profile['lights']:
-                profile_light = next(l for l in self.profile['lights'] if l['name'] == light['name'])
-                light_dmx = self.calculate_light_dmx(light, profile_light, fft_data)
-                dmx_values.update(light_dmx)
-
-        return dmx_values
-
-    def calculate_light_dmx(self, scene_light, profile_light, fft_data):
-        # use self.dmx_controller.get_fixtures_by_name(scene_light['name']) to get the fixture object
-        pass
-
+    def send_dynamic(self, fft_data):
+        # sends the dmx values to the controller based on the scene mapping
+        for light in self.scene_manager.current_scene['lights']:
+            if light['name'] not in self.light_names:
+                continue # skip to next light
+            if light['modulator'] == 'fft':
+                if light['type'] == 'dimmer':
+                    dmx_value = fft_to_dimmer(fft_data, light['frequency_range'], light['power_range'], light['brightness_range'])
+                    self.controller_dict(light['name']).dim(dmx_value)
+                elif light['type'] == 'rgb':
+                    dmx_values = fft_to_rgb(fft_data, light['frequency_range'], light['power_range'], light['brightness_range'], color=light['color'], strobe=light['strobe'])
+                    self.controller_dict(light['name']).set_channels(dmx_values)
+                elif light['type'] == 'strobe':
+                    dmx_values = fft_to_strobe(fft_data, light['frequency_range'], light['power_range'][0])
+                    self.controller_dict(light['name']).set_channels(dmx_values)
+            elif light['modulator'] == 'bool':
+                if light['type'] == 'dimmer':
+                    self.controller_dict(light['name']).dim(light['brightness'])
+                elif light['type'] == 'rgb':
+                    dmx_values = generate_RGB_signal(brightness=light['brightness'], color=light['color'], strobe=light['strobe'])
+                elif light['type'] == 'strobe':
+                    dmx_values = [light['speed'], light['brightness']]
+                    self.controller_dict(light['name']).set_channels(dmx_values)
+            elif light['modulator'] == 'time':
+                # get current time 
+                # transform time to dmx value by some rule (add these later, could be sine wave, linear, etc)
+                pass
+    
+    def send_static(self):
+        for light in self.scene_manager.current_scene['lights']:
+            if light['name'] not in self.light_names:
+                continue
+            if light['type'] == 'dimmer':
+                self.controller_dict(light['name']).dim(light['brightness'])
+            elif light['type'] == 'rgb':
+                dmx_values = generate_RGB_signal(brightness=light['brightness'], color=light['color'], strobe=light['strobe'])
+                self.controller_dict(light['name']).set_channels(dmx_values)
+            elif light['type'] == 'strobe':
+                dmx_values = [light['speed'], light['brightness']]
+                self.controller_dict(light['name']).set_channels(dmx_values)
 
     def stop(self):
         self.running.clear()
 
 def main():
-    audio_listener = AudioListener()
-
-    initial_scene = load_json('default_scene.json')  # Load your initial scene
-    
-    light_controller = LightController(audio_listener, dmx_controller, initial_scene)
+    audio_listener = AudioListener()  # Make sure this is imported or defined
+    scene_manager = SceneManager('scenes_directory')
+    light_controller = LightController(audio_listener, 'default', scene_manager)
     
     audio_listener.start()
     light_controller.start()
 
     try:
         while True:
-            # Main program logic
-            # Maybe handle user input to change scenes
+            # Add logic here to handle user input for scene changes
             pass
     finally:
         audio_listener.stop()

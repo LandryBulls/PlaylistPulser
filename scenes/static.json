@@ -1,0 +1,25 @@
+{
+    "name": "static_test",
+    "description": "Testing scene. This works as the template scene for running tests with two rgbs.",
+    "type": "static",
+
+    "lights": [
+        {
+            "name": "rgb1",
+            "type": "rgb",
+            "brightness": 255,
+            "color": "blue",
+            "strobe": false
+
+        },
+        {
+            "name": "rgb2",
+            "type": "rgb",
+            "brightness": 255,
+            "color": "red",
+            "strobe": true
+
+        }
+    ]
+
+}
