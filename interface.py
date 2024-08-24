@@ -9,8 +9,8 @@ Date: 8/20/24
 
 import curses
 import keyboard
-from .audio_listener import AudioListener
-from .control import LightController, SceneManager
+from audio_listener import AudioListener
+from control import LightController, SceneManager
 import time
 
 oculizer_title = """
@@ -39,13 +39,10 @@ def main(stdscr):
     scenes = list(scene_manager.scenes.keys())
     current_scene_index = 0
 
-    # add the title
-    stdscr.addstr(0, 0, oculizer_title)
-    time.sleep(2)
-
     while True:
         stdscr.clear()
-        stdscr.addstr(0, 0, f"Current Scene: {scenes[current_scene_index]}")
+        stdscr.addstr(0, 0, oculizer_title)
+        stdscr.addstr(1, 0, f"Current scene: {scenes[current_scene_index]}")
         stdscr.addstr(2, 0, "Press 'n' for next scene, 'p' for previous scene, 'q' to quit")
         stdscr.refresh()
 

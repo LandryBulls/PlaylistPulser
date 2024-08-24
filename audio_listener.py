@@ -11,9 +11,13 @@ import sounddevice as sd
 import numpy as np
 from scipy.fftpack import rfft
 import time
+from config import audio_parameters
+
+sample_rate = audio_parameters['SAMPLERATE']
+block_size = audio_parameters['BLOCKSIZE']
 
 class AudioListener(threading.Thread):
-    def __init__(self, sample_rate=44100, block_size=2048, channels=1):
+    def __init__(self, sample_rate=sample_rate, block_size=block_size, channels=1):
         threading.Thread.__init__(self)
         self.sample_rate = sample_rate
         self.block_size = block_size
@@ -83,7 +87,7 @@ def main():
                 # Process data here
                 pass
 
-            sd.sleep(10)  # Small delay to prevent busy-waiting
+            sd.sleep(10)  # Small delay to prevent busy-waiting (this is 10 milliseconds)
     except KeyboardInterrupt:
         print("Stopping audio listener...")
     finally:

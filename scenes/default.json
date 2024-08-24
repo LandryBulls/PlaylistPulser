@@ -1,40 +1,37 @@
 // This is a scene
 {
-        'name': 'default',
-        'description': 'Default scene. Nice baseline for testing or starting a new scene.'
+        "name": "default",
+        "description": "Default scene. Nice baseline for testing or starting a new scene.",
 
         // below define the unique lights that will be used in this scene. they can be static or dynamic. The order of the lights is important.
-        'lights': [
-            {
-                'name': 'ropes'
-                'input': {
-                    'type': 'fft_range_sum',
-                    'range': [0, 1000],
-                    'brightness_range': [0, 255],
-                    'color': 'random', 
-                    'strobe': true, 
-                }'
-
-            },
-            {
-                'name': 'disco_ball',
-
-            },
-            {
-                'name': 'lasers',
-
-            },
-            {
-                'name': 'lamp',
-
-            },
-            {
-                'name': 'strobe',
-
-            },
-            {
-                'name': 'rgb',
-
-            }
+        "lights": [
+                {
+                        "name": "ropes",
+                        "type": "dimmer",
+                        "frequency_range": [0, 1000],
+                        "brightness_range": [0, 255],
+                        "power_range": [1, 10]
+                },
+                {
+                        "name": "disco_ball",
+                        "type": "dimmer",
+                        "frequency_range": [0, 1000],
+                        "brightness_range": [0, 255],
+                        "power_range": [1, 10]
+                },
+                {
+                        "name": "lasers",
+                        "type": "dimmer",
+                        
+                },
+                {
+                        "name": "lamp"
+                },
+                {
+                        "name": "strobe"
+                },
+                {
+                        "name": "rgb"
+                }
         ]
 }

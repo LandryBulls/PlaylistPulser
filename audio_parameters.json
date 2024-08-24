@@ -1,0 +1,4 @@
+{
+    'SAMPLERATE': 16000,
+    'MINIMUM_FREQUENCY': 20 // The minimum frequency of the audio signal allowed 
+}
