@@ -1,3 +1,5 @@
+// This is a profile. 
+
 {
     'name': 'default',
     'description': 'Default profile. This works as the template lighting profile for running tests.'
