@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[10]:
-
-
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 
@@ -97,9 +94,6 @@ user = sp.user(username)
 sp.user = user
 
 
-# In[9]:
-
-
 # make a dict of RGB colors to their DMX values
 # this is the color wheel
 colors = {
@@ -127,14 +121,8 @@ def get_bass_brightness(bass_power):
     return int(MIN_BASS_BRIGHTNESS + (bass_power - BASS_MIN_THRESHOLD) * (BASS_BRIGHTNESS_RANGE / BASS_POWER_RANGE))
 
 
-# In[11]:
-
-
 with open("elm_cluster.pkl", "rb") as f:
     model = pickle.load(f)
-
-
-# In[6]:
 
 
 def get_playlist_df(playlist_id):
@@ -165,9 +153,6 @@ def get_playlist_df(playlist_id):
 
 
 elm_tracks = get_playlist_df('spotify:playlist:1nNxmkhYsOpa6Ux9MFJLoc')
-
-
-# In[12]:
 
 
 # just make a function that makes a function (nested func) and then give that output to the callback
@@ -282,12 +267,16 @@ def scene(scene_dict_template):
         def out_scene(indata, outdata, frames, time, status=None):
             power_spectrum = np.abs(np.fft.rfft(np.sum(indata, axis=1), n=None))
             power_specs.append(power_spectrum.tolist())
+
             # get the average power in the bass range
             bass_power = np.mean(power_spectrum[scene_dict['BASS_RANGE'][0]:scene_dict['BASS_RANGE'][1]])
+
             # get the average power in the mid range
             mid_power = np.mean(power_spectrum[scene_dict['MID_RANGE'][0]:scene_dict['MID_RANGE'][1]])
+
             # get the average power in the high hat range
             high_hat_power = np.mean(power_spectrum[scene_dict['HIGH_RANGE'][0]:scene_dict['HIGH_RANGE'][1]])
+            
             # get the total power
             total_power = np.sum(power_spectrum)
 
@@ -337,7 +326,7 @@ def scene(scene_dict_template):
 
 
 
-# In[ ]:
+
 
 
 class Pulser(object):

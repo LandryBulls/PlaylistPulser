@@ -2,15 +2,11 @@
 
 The primary goal of this project at this point is to perform audio analysis in real time to map sounds to control DMX lights. 
 
-~~This is an in-development project designed to allow Spotify users to craft the perfect playlist for any
-occasion. For example, if you want your Halloween party playlist, which starts at 6:30pm, to have a more chill vibe
-while people arrive but then pulse in energy to a peak in intensity and danceability from 10:00pm - 1:00am, you can do that. 
-If you also want said playlist so alternate between crowd favorites and your personal favorites, you can also do that while
-maintaining the pulse trajectory.~~
+There are four major layers. The minimal UI ran in the terminal, the logic to map audio features to lights, and the real-time reading of an audio stream and audio feature extract. 
 
-~~The code relies on the Spotipy package, which is a wrapper for the Spotify API. You can use it to extract features from music on 
-Spotify, like danceability, energy, valence, popularity, and acousticness. This package provides algorithms that use these features 
-to generate playlists depending on user preference.~~
+As it stands, a while loop that runs in a jupyter notebook reads the data from what's playing over the background music, performs an FFT every 400ms chunk, and converts powers in different frequency bands to light properties like light identity, color, 
+brightness, and the state of the DMX fixture. 
 
-~~Future implementations will integrate multisensor audiovisual streams to create an adaptive party environment, where the algorithm
-pays attention to the crowd's collective social state and optimizes energy expenditure and enjoyment.~~
+There are a few different mappings called "scenes" that are stored as dictionaries with parameters with keys (i.e., `bass_range`, `min_bass_brightness`, `strobe=True/False`). These dictonaries are then fed to functions that generate functions that are applied to each FFT vector and output a set of DMX commands based on the vector. 
+
+I'm going to attempt to restructure it into different python scripts to make it more organized and actually work like a packge. 
