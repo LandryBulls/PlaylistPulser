@@ -42,7 +42,7 @@ def generate_RGB_signal(brightness=255, color='pink', strobe=False, strobe_speed
         color = random_color()
     else:
         color = colors[color]
-    return [brightness, colors[0], colors[1], colors[2], strobe_val, 0, 0]
+    return [brightness, color[0], color[1], color[2], strobe_val, 0]
 
 def freq_to_index(freq):
     return int(round(freq * BLOCKSIZE / SAMPLERATE)) # This converts a frequency to an index in the FFT vector
@@ -86,15 +86,15 @@ def fft_to_rgb(fft_vec, frange=[0,2000], prange=[1.0, 15.0], brange=[0,255], col
     """
 
     freq_low, freq_high = freq_to_index(frange[0]), freq_to_index(frange[1])
-    fft_sum = np.sum(fft_vec[freq_low:freq_high])
-    brightness = power_to_brightness(fft_sum, prange[0], prange[1], brange[0], brange[1])
+    fft_mean = np.mean(fft_vec[freq_low:freq_high])
+    brightness = power_to_brightness(fft_mean, prange[0], prange[1], brange[0], brange[1])
 
     if color == 'random':
         color = random_color()
     else:
         color = colors[color]
 
-    return generate_RGB_signal(brightness=brightness, color=color, strobe=strobe)
+    return [brightness, color[0], color[1], color[2], 255 if strobe else 0, 0]
 
 def fft_to_dimmer(fft_vec, frange, prange=[0.5,1.0], brange=[0,255]):
     """
@@ -113,8 +113,8 @@ def fft_to_dimmer(fft_vec, frange, prange=[0.5,1.0], brange=[0,255]):
     """
 
     freq_low, freq_high = freq_to_index(frange[0]), freq_to_index(frange[1])
-    fft_sum = np.sum(fft_vec[freq_low:freq_high])
-    brightness = power_to_brightness(fft_sum, prange[0], prange[1], brange[0], brange[1])
+    fft_mean = np.mean(fft_vec[freq_low:freq_high])
+    brightness = power_to_brightness(fft_mean, prange[0], prange[1], brange[0], brange[1])
 
     return brightness   
 
@@ -136,10 +136,22 @@ def fft_to_strobe(fft_vec, frange, lower_threshold=0.5):
     """
 
     freq_low, freq_high = freq_to_index(frange[0]), freq_to_index(frange[1])
-    fft_sum = np.sum(fft_vec[freq_low:freq_high])
+    fft_mean = np.mean(fft_vec[freq_low:freq_high])
     if fft_sum >= lower_threshold:
         return (255, 255)
     else:
         return (0, 0)
+
+if __name__ == '__main__':
+    # Test the functions
+    print('fft vec:')
+    fft_vec = np.random.rand(BLOCKSIZE)
+    print(fft_vec)
+    print('fft to dimmer:')
+    print(fft_to_dimmer(fft_vec, [0, 2000]))
+    print('fft to rgb:')
+    print(fft_to_rgb(fft_vec, [0, 2000]))
+    print('fft to strobe:')
+    print(fft_to_strobe(fft_vec, [0, 2000]))
     
 

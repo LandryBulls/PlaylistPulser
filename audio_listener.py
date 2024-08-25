@@ -13,11 +13,19 @@ from scipy.fftpack import rfft
 import time
 from config import audio_parameters
 
-sample_rate = audio_parameters['SAMPLERATE']
-block_size = audio_parameters['BLOCKSIZE']
+SAMPLERATE = audio_parameters['SAMPLERATE']
+BLOCKSIZE = audio_parameters['BLOCKSIZE']
+
+# get blackhole audio device
+def get_blackhole_device_idx():
+    devices = sd.query_devices()
+    for device in devices:
+        if 'BlackHole' in device['name']:
+            return device['index']
+    return None
 
 class AudioListener(threading.Thread):
-    def __init__(self, sample_rate=sample_rate, block_size=block_size, channels=1):
+    def __init__(self, sample_rate=SAMPLERATE, block_size=BLOCKSIZE, channels=1):
         threading.Thread.__init__(self)
         self.sample_rate = sample_rate
         self.block_size = block_size
@@ -26,6 +34,7 @@ class AudioListener(threading.Thread):
         self.fft_queue = queue.Queue()
         self.running = threading.Event()
         self.error_queue = queue.Queue()
+        self.device_idx = get_blackhole_device_idx()
 
     def run(self):
         def audio_callback(indata, frames, time, status):
@@ -33,7 +42,7 @@ class AudioListener(threading.Thread):
                 self.error_queue.put(f"Audio callback error: {status}")
             try:
                 audio_data = np.copy(indata[:, 0])
-                fft_data = np.abs(rfft(audio_data))[:len(audio_data)//2]
+                fft_data = np.abs(np.fft.rfft(np.sum(indata, axis=1), n=None))
                 self.audio_queue.put(audio_data)
                 self.fft_queue.put(fft_data)
             except Exception as e:
@@ -42,7 +51,7 @@ class AudioListener(threading.Thread):
         self.running.set()
         try:
             with sd.InputStream(callback=audio_callback, channels=self.channels, 
-                                samplerate=self.sample_rate, blocksize=self.block_size):
+                                samplerate=self.sample_rate, blocksize=self.block_size, device=self.device_idx):
                 while self.running.is_set():
                     sd.sleep(100)
         except Exception as e:

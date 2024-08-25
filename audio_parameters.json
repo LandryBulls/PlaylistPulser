@@ -1,4 +1,4 @@
 {
-    "SAMPLERATE": 16000,
+    "SAMPLERATE": 44100,
     "MINIMUM_FREQUENCY": 20 
 }

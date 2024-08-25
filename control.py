@@ -77,21 +77,22 @@ class LightController(threading.Thread):
             if light['modulator'] == 'fft':
                 if light['type'] == 'dimmer':
                     dmx_value = fft_to_dimmer(fft_data, light['frequency_range'], light['power_range'], light['brightness_range'])
-                    self.controller_dict(light['name']).dim(dmx_value)
+                    self.controller_dict[light['name']].dim(dmx_value)
                 elif light['type'] == 'rgb':
-                    dmx_values = fft_to_rgb(fft_data, light['frequency_range'], light['power_range'], light['brightness_range'], color=light['color'], strobe=light['strobe'])
-                    self.controller_dict(light['name']).set_channels(dmx_values)
+                    dmx_values = fft_to_rgb(fft_data, frange=light['frequency_range'], prange=light['power_range'], brange=light['brightness_range'], color=light['color'], strobe=light['strobe'])
+                    self.controller_dict[light['name']].set_channels(dmx_values)
                 elif light['type'] == 'strobe':
                     dmx_values = fft_to_strobe(fft_data, light['frequency_range'], light['power_range'][0])
-                    self.controller_dict(light['name']).set_channels(dmx_values)
+                    self.controller_dict[light['name']].set_channels(dmx_values)
             elif light['modulator'] == 'bool':
                 if light['type'] == 'dimmer':
-                    self.controller_dict(light['name']).dim(light['brightness'])
+                    self.controller_dict[light['name']].dim(light['brightness'])
                 elif light['type'] == 'rgb':
                     dmx_values = generate_RGB_signal(brightness=light['brightness'], color=light['color'], strobe=light['strobe'])
+                    self.controller_dict[light['name']].set_channels(dmx_values)
                 elif light['type'] == 'strobe':
                     dmx_values = [light['speed'], light['brightness']]
-                    self.controller_dict(light['name']).set_channels(dmx_values)
+                    self.controller_dict[light['name']].set_channels(dmx_values)
             elif light['modulator'] == 'time':
                 # get current time 
                 # transform time to dmx value by some rule (add these later, could be sine wave, linear, etc)
@@ -102,13 +103,13 @@ class LightController(threading.Thread):
             if light['name'] not in self.light_names:
                 continue
             if light['type'] == 'dimmer':
-                self.controller_dict(light['name']).dim(light['brightness'])
+                self.controller_dict[light['name']].dim(light['brightness'])
             elif light['type'] == 'rgb':
                 dmx_values = generate_RGB_signal(brightness=light['brightness'], color=light['color'], strobe=light['strobe'])
-                self.controller_dict(light['name']).set_channels(dmx_values)
+                self.controller_dict[light['name']].set_channels(dmx_values)
             elif light['type'] == 'strobe':
                 dmx_values = [light['speed'], light['brightness']]
-                self.controller_dict(light['name']).set_channels(dmx_values)
+                self.controller_dict[light['name']].set_channels(dmx_values)
 
     def stop(self):
         self.running.clear()

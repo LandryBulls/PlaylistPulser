@@ -18,6 +18,7 @@ stdscr = curses.initscr()
 def main():
     audio_listener = AudioListener()
     scene_manager = SceneManager('scenes')
+    scene_manager.set_scene('testing')
     light_controller = LightController(audio_listener, 'testing', scene_manager)
     audio_listener.start()
     light_controller.start()
