@@ -8,6 +8,8 @@ Date: 8/24/24
 import numpy as np
 import json
 from config import audio_parameters
+import numpy as np
+import time
 
 SAMPLERATE = audio_parameters['SAMPLERATE']
 BLOCKSIZE = audio_parameters['BLOCKSIZE']
@@ -45,7 +47,9 @@ def generate_RGB_signal(brightness=255, color='pink', strobe=False, strobe_speed
     return [brightness, color[0], color[1], color[2], strobe_val, 0]
 
 def freq_to_index(freq):
-    return int(round(freq * BLOCKSIZE / SAMPLERATE)) # This converts a frequency to an index in the FFT vector
+    if freq > SAMPLERATE / 2:
+        raise ValueError(f"Frequency {freq} Hz is above the Nyquist frequency {SAMPLERATE/2} Hz")
+    return int(freq * BLOCKSIZE / SAMPLERATE)
 
 def power_to_brightness(power, lower_threshold, upper_threshold, min_brightness=0, max_brightness=255):
     """
@@ -91,6 +95,7 @@ def fft_to_rgb(fft_vec, frange=[0,2000], prange=[1.0, 15.0], brange=[0,255], col
 
     if color == 'random':
         color = random_color()
+        color = colors[color]
     else:
         color = colors[color]
 
@@ -137,10 +142,142 @@ def fft_to_strobe(fft_vec, frange, lower_threshold=0.5):
 
     freq_low, freq_high = freq_to_index(frange[0]), freq_to_index(frange[1])
     fft_mean = np.mean(fft_vec[freq_low:freq_high])
-    if fft_sum >= lower_threshold:
+    if fft_mean >= lower_threshold:
         return (255, 255)
     else:
         return (0, 0)
+
+def bool_rgb(light):
+    """
+    Returns the DMX value for a static dimmer light
+    """
+    if light['strobe']:
+        strobe_val = 255
+        if strobe_speed == 'random':
+            strobe_speed = np.random.randint(0, 255)
+        else:
+            strobe_speed = light['strobe_speed']
+    else:
+        strobe_val = 0
+        strobe_speed = 0
+    if light['color'] == 'random':
+        color = random_color()
+    else:
+        color = colors[light['color']]
+    return [light['brightness'], color[0], color[1], color[2], strobe_val, strobe_speed]
+
+def bool_strobe(light):
+    """
+    Returns the DMX value for a static strobe light
+    """
+    if light['strobe_speed'] == 'random':
+        strobe_speed = np.random.randint(0, 255)
+    else:
+        strobe_speed = light['strobe_speed']
+
+    if light['brightness'] == 'random':
+        brightness = np.random.randint(0, 255)
+    else:
+        brightness = light['brightness']
+    return [strobe_speed, brightness]
+
+def time_dimmer(light):
+    """
+    Returns the DMX value for a time-based dimmer light based on the current time in seconds. 
+    """
+    amplitude = (light['max_brightness'] - light['min_brightness']) / 2
+    midpoint = (light['max_brightness'] + light['min_brightness']) / 2
+    if light['function'] == 'sine':
+        return int(np.sin(time.time() * light['frequency']) * amplitude + midpoint)
+    elif light['function'] == 'square':
+        return int(np.sign(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+    elif light['function'] == 'triangle':
+        return int(np.abs(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+    elif light['function'] == 'sawtooth_forward':
+        return int((time.time() * light['frequency'] % 1) * amplitude + midpoint)
+    elif light['function'] == 'sawtooth_backward':
+        return int((1 - time.time() * light['frequency'] % 1) * amplitude + midpoint)
+
+def time_rgb(light):
+    """
+    Returns the DMX value for a time-based RGB light based on the current time in seconds. 
+    """
+    amplitude = (light['max_brightness'] - light['min_brightness']) / 2
+    midpoint = (light['max_brightness'] + light['min_brightness']) / 2
+    if light['function'] == 'sine':
+        brightness = int(np.sin(time.time() * light['frequency']) * amplitude + midpoint)
+    elif light['function'] == 'square':
+        brightness = int(np.sign(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+    elif light['function'] == 'triangle':
+        brightness = int(np.abs(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+    elif light['function'] == 'sawtooth_forward':
+        brightness = int((time.time() * light['frequency'] % 1) * amplitude + midpoint)
+    elif light['function'] == 'sawtooth_backward':
+        brightness = int((1 - time.time() * light['frequency'] % 1) * amplitude + midpoint)
+
+    if light['color'] == 'random':
+        color = random_color()
+    else:
+        color = colors[light['color']]
+    return [brightness, color[0], color[1], color[2], 255 if light['strobe'] else 0, 0]
+
+def time_strobe(light):
+    """
+    Returns the DMX value for a time-based strobe light based on the current time in seconds. 
+    """
+    speed_range = light['speed_range'][1] - light['speed_range'][0]
+    brightness_range = light['brightness_range'][1] - light['brightness_range'][0]
+    if light['target'] == 'speed':
+        amplitude = speed_range / 2
+        midpoint = (light['speed_range'][1] + light['speed_range'][0]) / 2
+        if light['function'] == 'sine':
+            speed = int(np.sin(time.time() * light['frequency']) * amplitude + midpoint)
+        elif light['function'] == 'square':
+            speed = int(np.sign(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+        elif light['function'] == 'triangle':
+            speed = int(np.abs(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+        elif light['function'] == 'sawtooth_forward':
+            speed = int((time.time() * light['frequency'] % 1) * amplitude + midpoint)
+        elif light['function'] == 'sawtooth_backward':
+            speed = int((1 - time.time() * light['frequency'] % 1) * amplitude + midpoint)
+        return [speed, light['brightness']]
+
+    elif light['target'] == 'brightness':
+        amplitude = brightness_range / 2
+        midpoint = (light['brightness_range'][1] + light['brightness_range'][0]) / 2
+        if light['function'] == 'sine':
+            brightness = int(np.sin(time.time() * light['frequency']) * amplitude + midpoint)
+        elif light['function'] == 'square':
+            brightness = int(np.sign(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+        elif light['function'] == 'triangle':
+            brightness = int(np.abs(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+        elif light['function'] == 'sawtooth_forward':
+            brightness = int((time.time() * light['frequency'] % 1) * amplitude + midpoint)
+        elif light['function'] == 'sawtooth_backward':
+            brightness = int((1 - time.time() * light['frequency'] % 1) * amplitude + midpoint)
+        return [light['speed'], brightness]
+
+    elif light['target'] == 'both':
+        speed_amplitude = speed_range / 2
+        speed_midpoint = (light['speed_range'][1] + light['speed_range'][0]) / 2
+        brightness_amplitude = brightness_range / 2
+        brightness_midpoint = (light['brightness_range'][1] + light['brightness_range'][0]) / 2
+        if light['function'] == 'sine':
+            speed = int(np.sin(time.time() * light['frequency']) * speed_amplitude + speed_midpoint)
+            brightness = int(np.sin(time.time() * light['frequency']) * brightness_amplitude + brightness_midpoint)
+        elif light['function'] == 'square':
+            speed = int(np.sign(np.sin(time.time() * light['frequency'])) * speed_amplitude + speed_midpoint)
+            brightness = int(np.sign(np.sin(time.time() * light['frequency'])) * brightness_amplitude + brightness_midpoint)
+        elif light['function'] == 'triangle':
+            speed = int(np.abs(np.sin(time.time() * light['frequency'])) * speed_amplitude + speed_midpoint)
+            brightness = int(np.abs(np.sin(time.time() * light['frequency'])) * brightness_amplitude + brightness_midpoint)
+        elif light['function'] == 'sawtooth_forward':
+            speed = int((time.time() * light['frequency'] % 1) * speed_amplitude + speed_midpoint)
+            brightness = int((time.time() * light['frequency'] % 1) * brightness_amplitude + brightness_midpoint)
+        elif light['function'] == 'sawtooth_backward':
+            speed = int((1 - time.time() * light['frequency'] % 1) * speed_amplitude + speed_midpoint)
+            brightness = int((1 - time.time() * light['frequency'] % 1) * brightness_amplitude + brightness_midpoint)
+        return [speed, brightness]
 
 if __name__ == '__main__':
     # Test the functions
@@ -153,5 +290,15 @@ if __name__ == '__main__':
     print(fft_to_rgb(fft_vec, [0, 2000]))
     print('fft to strobe:')
     print(fft_to_strobe(fft_vec, [0, 2000]))
-    
+    print('bool rgb:')
+    print(bool_rgb({'brightness': 255, 'color': 'red', 'strobe': False}))
+    print('bool strobe:')
+    print(bool_strobe({'strobe_speed': 255, 'brightness': 255}))
+    print('time dimmer:')
+    print(time_dimmer({'min_brightness': 0, 'max_brightness': 255, 'frequency': 0.1, 'function': 'sine'}))
+    print('time rgb:')
+    print(time_rgb({'min_brightness': 0, 'max_brightness': 255, 'frequency': 0.1, 'function': 'sine', 'color': 'red', 'strobe': False}))
+    print('time strobe:')
+    print(time_strobe({'speed_range': [0, 255], 'brightness_range': [0, 255], 'frequency': 1, 'function': 'sine', 'target': 'both'}))
+
 

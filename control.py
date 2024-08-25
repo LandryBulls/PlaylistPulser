@@ -16,7 +16,7 @@ import threading
 import queue
 import os
 import json
-from mapping import fft_to_rgb, fft_to_strobe, fft_to_dimmer, generate_RGB_signal
+from mapping import fft_to_rgb, fft_to_strobe, fft_to_dimmer, generate_RGB_signal, bool_rgb
 from audio_listener import AudioListener
 from scene_manager import SceneManager
 from utils import load_json 
@@ -52,6 +52,7 @@ class LightController(threading.Thread):
         self.dmx_controller, self.controller_dict = load_controller(self.profile)
         self.scene_manager = scene_manager
         self.running = threading.Event()
+        self.fft_data = None
 
     def change_scene(self, scene_name):
         self.scene_manager.set_scene(scene_name)
@@ -60,21 +61,28 @@ class LightController(threading.Thread):
         self.running.set()
         while self.running.is_set():
             if self.scene_manager.current_scene['type'] == 'dynamic':
-                fft_data = self.audio_listener.get_fft_data(timeout=0.1)
-                if fft_data is not None:
+                if not self.audio_listener.fft_queue.empty():
                     try:
-                        self.send_dynamic(fft_data)
+                        self.send_dynamic()
                     except Exception as e:
                         print(f"Error sending dynamic data: {str(e)}")
             else:
                 self.send_static()
             
-    def send_dynamic(self, fft_data):
+    def send_dynamic(self):
         # sends the dmx values to the controller based on the scene mapping
-        for light in self.scene_manager.current_scene['lights']:
-            if light['name'] not in self.light_names:
-                continue # skip to next light
-            if light['modulator'] == 'fft':
+        for light in self.profile['lights']:
+            if light['name'] not in self.scene_manager.current_scene['lights']:
+                # turn it off
+                if light['type'] == 'dimmer':
+                    self.controller_dict[light['name']].dim(0)
+                elif light['type'] == 'rgb':
+                    self.controller_dict[light['name']].set_channels([0,0,0,0,0,0])
+                elif light['type'] == 'strobe':
+                    self.controller_dict[light['name']].set_channels([0,0])
+
+            elif light['modulator'] == 'fft':
+                fft_data = self.audio_listener.fft_queue.get(timeout=0.1)
                 if light['type'] == 'dimmer':
                     dmx_value = fft_to_dimmer(fft_data, light['frequency_range'], light['power_range'], light['brightness_range'])
                     self.controller_dict[light['name']].dim(dmx_value)
@@ -84,23 +92,23 @@ class LightController(threading.Thread):
                 elif light['type'] == 'strobe':
                     dmx_values = fft_to_strobe(fft_data, light['frequency_range'], light['power_range'][0])
                     self.controller_dict[light['name']].set_channels(dmx_values)
+
             elif light['modulator'] == 'bool':
                 if light['type'] == 'dimmer':
                     self.controller_dict[light['name']].dim(light['brightness'])
                 elif light['type'] == 'rgb':
-                    dmx_values = generate_RGB_signal(brightness=light['brightness'], color=light['color'], strobe=light['strobe'])
-                    self.controller_dict[light['name']].set_channels(dmx_values)
+                    self.controller_dict[light['name']].set_channels(bool_rgb(light['brightness'], light['color'], light['strobe']))
                 elif light['type'] == 'strobe':
                     dmx_values = [light['speed'], light['brightness']]
                     self.controller_dict[light['name']].set_channels(dmx_values)
+
             elif light['modulator'] == 'time':
-                # get current time 
-                # transform time to dmx value by some rule (add these later, could be sine wave, linear, etc)
-                pass
+                if light['type'] == 'dimmer':
+                    self.controller_dict[light['name']].dim(time_dimmer(light))
     
     def send_static(self):
         for light in self.scene_manager.current_scene['lights']:
-            if light['name'] not in self.light_names:
+            if light['name'] not in self.profile['lights']:
                 continue
             if light['type'] == 'dimmer':
                 self.controller_dict[light['name']].dim(light['brightness'])

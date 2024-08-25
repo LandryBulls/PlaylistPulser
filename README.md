@@ -9,4 +9,10 @@ brightness, and the state of the DMX fixture.
 
 There are a few different mappings called "scenes" that are stored as dictionaries with parameters with keys (i.e., `bass_range`, `min_bass_brightness`, `strobe=True/False`). These dictonaries are then fed to functions that generate functions that are applied to each FFT vector and output a set of DMX commands based on the vector. 
 
-I'm going to attempt to restructure it into different python scripts to make it more organized and actually work like a packge. 
+I'm going to attempt to restructure it into different python scripts to make it more organized and actually work like a package. 
+
+TO-DO's:
+- Implement MFCC calculation using librosa with precomputed filterbank. Use MFCC for all subsequent processing. 
+- Add Spotifizer to get song data and associated scene mappings.
+- Add fancy UI with curses. 
+- Workshop other ML-based audio processing techniques?

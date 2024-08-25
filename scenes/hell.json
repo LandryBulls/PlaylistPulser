@@ -1,3 +1,78 @@
 {
-    
+    "name": "hell",
+    "description": "Stochastic red strobe on rgbs. All else off.",
+    "type": "static",
+
+    "lights": [
+        {
+            "name": "rgb1", 
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": "random",
+            "color": "red",
+            "strobe": true,
+            "strobe_speed": "random"
+        },
+        {
+            "name": "rgb2",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": "random",
+            "color": "red",
+            "strobe": true, 
+            "strobe_speed": "random"
+        },
+        {
+            "name": "rgb3",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": "random",
+            "color": "red",
+            "strobe": true, 
+            "strobe_speed": "random"
+        },
+        {
+            "name": "rgb4",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": "random",
+            "color": "red",
+            "strobe": true, 
+            "strobe_speed": "random"
+        },
+        {
+            "name": "rgb5",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": "random",
+            "color": "red",
+            "strobe": true, 
+            "strobe_speed": "random"
+        },
+        {
+            "name": "rgb6",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": "random",
+            "color": "red",
+            "strobe": true, 
+            "strobe_speed": "random"
+        },        {
+            "name": "rgb7",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": "random",
+            "color": "red",
+            "strobe": true, 
+            "strobe_speed": "random"
+        },        {
+            "name": "rgb8",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": "random",
+            "color": "red",
+            "strobe": true, 
+            "strobe_speed": "random"
+        },
+    ]
 }

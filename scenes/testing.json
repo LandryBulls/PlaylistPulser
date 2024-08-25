@@ -5,7 +5,7 @@
 
     "lights": [
         {
-            "name": "rgb1",
+            "name": "rgb1", 
             "type": "rgb",
             "modulator": "fft",
             "frequency_range": [20, 200],
@@ -17,10 +17,14 @@
         {
             "name": "rgb2",
             "type": "rgb",
-            "modulator": "bool",
-            "brightness": 255,
-            "color": "red",
-            "strobe": false
+            "modulator": "time",
+            "function": "sine",
+            "frequency": 1,
+            "brightness_range": [0, 255],
+            "random_brightness": true,
+            "color": "white",
+            "strobe": true,
+            "strobe_speed": 255
         }
     ]
 
