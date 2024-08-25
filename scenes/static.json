@@ -1,25 +1,26 @@
 {
-    "name": "static_test",
+    "name": "testing",
     "description": "Testing scene. This works as the template scene for running tests with two rgbs.",
-    "type": "static",
-
+    "key_command": "s",
     "lights": [
         {
-            "name": "rgb1",
+            "name": "rgb1", 
             "type": "rgb",
-            "modulator": "static",
+            "modulator": "bool",
             "brightness": 255,
-            "color": "blue",
-            "strobe": false
-
+            "color": "pink",
+            "strobe": 100
         },
         {
             "name": "rgb2",
             "type": "rgb",
-            "modulator": "static",
+            "modulator": "fft",
             "brightness": 100,
-            "color": "green",
-            "strobe": true
+            "color": "blue",
+            "strobe": 0,
+            "frequency_range": [0, 1000],
+            "power_range": [0, 1],
+            "brightness_range": [0, 255]
 
         }
     ]

@@ -1,0 +1,69 @@
+{
+    "name": "disco",
+    "description": "Disco scene. Disco ball and RGB wavies.",
+    "key_command": "d",
+    "lights": [
+        {
+            "name": "disco_ball",
+            "type": "dimmer",
+            "modulator": "bool",
+            "brightness": 255
+        },
+        {
+            "name": "rgb1",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": 100,
+            "colorfade": 100
+        },
+        {
+            "name": "rgb2",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": 10,
+            "colorfade": 100
+        },
+        {
+            "name": "rgb3",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": 50,
+            "colorfade": 100
+        },
+        {
+            "name": "rgb4",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": 50,
+            "colorfade": 150
+        },
+        {
+            "name": "rgb5",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": 50,
+            "colorfade": 100
+        },
+        {
+            "name": "rgb6",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": 50,
+            "colorfade": 150
+        },
+        {
+            "name": "rgb7",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": 50,
+            "colorfade": 100
+        },
+        {
+            "name": "rgb8",
+            "type": "rgb",
+            "modulator": "bool",
+            "brightness": 50,
+            "colorfade": 255
+        }
+    ]
+}

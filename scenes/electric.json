@@ -1,7 +1,7 @@
 {
-    "name": "hell",
-    "description": "Stochastic red strobe on rgbs. All else off.",
-    "key_command": "h",
+    "name": "electric",
+    "description": "Stochastic white strobe on rgbs. All else off.",
+    "key_command": "e",
     "lights": [
         {
             "name": "rgb1", 
@@ -9,7 +9,7 @@
             "modulator": "bool",
             "brightness": "random",
             "max_brightness": 50,
-            "color": "red",
+            "color": "white",
             "strobe": "random"
         },
         {
@@ -17,7 +17,7 @@
             "type": "rgb",
             "modulator": "bool",
             "brightness": "random",
-            "color": "red",
+            "color": "white",
             "strobe": "random"
         },
         {
@@ -25,7 +25,7 @@
             "type": "rgb",
             "modulator": "bool",
             "brightness": "random",
-            "color": "red",
+            "color": "white",
             "strobe": "random"
         },
         {
@@ -33,7 +33,7 @@
             "type": "rgb",
             "modulator": "bool",
             "brightness": "random",
-            "color": "red",
+            "color": "white",
             "strobe": "random"
         },
         {
@@ -41,7 +41,7 @@
             "type": "rgb",
             "modulator": "bool",
             "brightness": "random",
-            "color": "red",
+            "color": "white",
             "strobe": "random"
         },
         {
@@ -49,7 +49,7 @@
             "type": "rgb",
             "modulator": "bool",
             "brightness": "random",
-            "color": "red",
+            "color": "white",
             "strobe": "random"
         },
         {
@@ -57,7 +57,7 @@
             "type": "rgb",
             "modulator": "bool",
             "brightness": "random",
-            "color": "red",
+            "color": "white",
             "strobe": "random"
         },
         {
@@ -65,8 +65,15 @@
             "type": "rgb",
             "modulator": "bool",
             "brightness": "random",
-            "color": "red",
+            "color": "white",
             "strobe": "random"
+        },
+        {
+            "name": "strobe",
+            "type": "strobe",
+            "modulator": "bool",
+            "brightness": "random",
+            "speed": "random"
         }
     ]
 }

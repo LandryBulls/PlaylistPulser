@@ -1,30 +1,29 @@
 {
     "name": "testing",
     "description": "Testing scene. This works as the template scene for running tests with two rgbs.",
-    "type": "dynamic",
-
+    "key_command": "t",
     "lights": [
         {
             "name": "rgb1", 
             "type": "rgb",
             "modulator": "fft",
-            "frequency_range": [20, 200],
-            "brightness_range": [0, 255],
-            "power_range": [100, 150],
+            "brightness_range": [1, 255],
+            "frequency_range": [10, 500],
+            "power_range": [1, 5],
             "color": "white",
-            "strobe": true
+            "strobe": 255
         },
         {
             "name": "rgb2",
             "type": "rgb",
-            "modulator": "time",
-            "function": "sine",
-            "frequency": 1,
-            "brightness_range": [0, 255],
-            "random_brightness": true,
-            "color": "white",
-            "strobe": true,
-            "strobe_speed": 255
+            "modulator": "fft",
+            "brightness": 100,
+            "color": "green",
+            "strobe": 0,
+            "frequency_range": [2000, 5000],
+            "power_range": [0, 3],
+            "brightness_range": [0, 255]
+
         }
     ]
 

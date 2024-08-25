@@ -1,0 +1,31 @@
+{
+    "name": "wavies",
+    "description": "Sine waves for testing.",
+    "key_command": "w",
+
+    "lights": [
+        {
+            "name": "rgb1",
+            "type": "rgb",
+            "modulator": "time",
+            "min_brightness": 0,
+            "max_brightness": 255,
+            "color": "purple",
+            "frequency": 1,
+            "function": "sawtooth_backward",
+            "strobe": 0
+        },
+        {
+            "name": "rgb2",
+            "type": "rgb",
+            "modulator": "time",
+            "min_brightness": 0,
+            "max_brightness": 255,
+            "color": "purple",
+            "function": "sine",
+            "frequency": 0.5,
+            "strobe": 0
+        }
+    ]
+
+}

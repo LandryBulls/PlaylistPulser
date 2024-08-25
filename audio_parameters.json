@@ -1,5 +1,4 @@
 {
     "SAMPLERATE": 16000,
-    "MINIMUM_FREQUENCY": 20, 
-    "BLOCKSIZE": 1024
+    "BLOCKSIZE": 512
 }

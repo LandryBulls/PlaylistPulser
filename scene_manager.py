@@ -19,3 +19,14 @@ class SceneManager:
             self.current_scene = self.scenes[scene_name]
         else:
             raise ValueError(f"Scene '{scene_name}' not found")
+
+    def reload_scenes(self):
+        self.scenes = self.load_json_files('scenes')
+
+def main():
+    scene_manager = SceneManager('scenes')
+    scene_manager.set_scene('testing')
+    print(scene_manager.current_scene)
+
+if __name__ == '__main__':
+    main()

@@ -12,6 +12,7 @@ import numpy as np
 from scipy.fftpack import rfft
 import time
 from config import audio_parameters
+import curses
 
 SAMPLERATE = audio_parameters['SAMPLERATE']
 BLOCKSIZE = audio_parameters['BLOCKSIZE']
@@ -79,6 +80,8 @@ class AudioListener(threading.Thread):
         return errors
 
 def main():
+    stdscr = curses.initscr()
+
     audio_listener = AudioListener()
     audio_listener.start()
     print('Listening to audio...')
@@ -88,6 +91,12 @@ def main():
             audio_data = audio_listener.get_audio_data()
             fft_data = audio_listener.get_fft_data()
             errors = audio_listener.get_errors()
+            # put the sum with curses
+            stdscr.clear()
+            stdscr.addstr(0, 1, f"FFT Sum: {np.sum(fft_data)}")
+            if fft_data is not None:
+                stdscr.addstr(1, 1, f'FFT Shape: {len(fft_data)}')
+            stdscr.refresh()
 
             if errors:
                 print("Errors occurred:", errors)

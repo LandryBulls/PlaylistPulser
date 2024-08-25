@@ -10,6 +10,7 @@ import json
 from config import audio_parameters
 import numpy as np
 import time
+from math import sin, pi
 
 SAMPLERATE = audio_parameters['SAMPLERATE']
 BLOCKSIZE = audio_parameters['BLOCKSIZE']
@@ -32,14 +33,12 @@ def random_color():
     """
     return np.random.choice(list(colors.keys()))
 
-def generate_RGB_signal(brightness=255, color='pink', strobe=False, strobe_speed=255):
+def generate_RGB_signal(brightness=255, color='pink', strobe=0, colorfade=0):
     """
     Returns the list of 7 DMX values for the RGB light
     """
-    if strobe:
-        strobe_val = 255
-    else:
-        strobe_val = 0
+    if strobe=='random':
+        strobe_val = np.random.randint(0, 255)
     if color == 'random':
         color = random_color()
     else:
@@ -72,7 +71,7 @@ def power_to_brightness(power, lower_threshold, upper_threshold, min_brightness=
     else:
         return int((power - lower_threshold) / (upper_threshold - lower_threshold) * (max_brightness - min_brightness) + min_brightness)
 
-def fft_to_rgb(fft_vec, frange=[0,2000], prange=[1.0, 15.0], brange=[0,255], color='random', strobe=False):
+def fft_to_rgb(fft_vec, frange=[0,2000], prange=[1.0, 15.0], brange=[0,255], color='random', strobe=0):
     """
     Converts an FFT vector to a set of DMX values to activate an RGB fixture. 
 
@@ -83,7 +82,7 @@ def fft_to_rgb(fft_vec, frange=[0,2000], prange=[1.0, 15.0], brange=[0,255], col
     upper_threshold (int): The upper threshold for the FFT sum over which the maximum brightness is used.
     min_brightness (int): The minimum brightness value to use.
     max_brightness (int): The maximum brightness value to use.
-    strobe (bool): Whether to use strobe mode.
+    strobe (int): The strobe value to use.
 
     Returns:
     int: The DMX value(s) to be sent to a given fixture. 
@@ -95,11 +94,9 @@ def fft_to_rgb(fft_vec, frange=[0,2000], prange=[1.0, 15.0], brange=[0,255], col
 
     if color == 'random':
         color = random_color()
-        color = colors[color]
-    else:
-        color = colors[color]
-
-    return [brightness, color[0], color[1], color[2], 255 if strobe else 0, 0]
+    color = colors[color]
+    
+    return [brightness, color[0], color[1], color[2], strobe, 0]
 
 def fft_to_dimmer(fft_vec, frange, prange=[0.5,1.0], brange=[0,255]):
     """
@@ -151,35 +148,40 @@ def bool_rgb(light):
     """
     Returns the DMX value for a static dimmer light
     """
-    if light['strobe']:
-        strobe_val = 255
-        if strobe_speed == 'random':
-            strobe_speed = np.random.randint(0, 255)
+    if 'colorfade' in light:
+        color = [0, 0, 0]
+        colorfade = light['colorfade']
+    else:
+        if light['color']=='random':
+            color = colors[random_color()]
         else:
-            strobe_speed = light['strobe_speed']
+            color = colors[light['color']]
+        colorfade = 0
+
+    if 'strobe' in light:
+        strobe = light['strobe']
+        if strobe=='random':
+            strobe = np.random.randint(0, 255)
     else:
-        strobe_val = 0
-        strobe_speed = 0
-    if light['color'] == 'random':
-        color = random_color()
-    else:
-        color = colors[light['color']]
-    return [light['brightness'], color[0], color[1], color[2], strobe_val, strobe_speed]
+        strobe = 0
+
+    brightness = light['brightness']
+    if light['brightness']=='random':
+        brightness = np.random.randint(0, 255)
+    
+    return [brightness, color[0], color[1], color[2], strobe, colorfade]
 
 def bool_strobe(light):
     """
     Returns the DMX value for a static strobe light
     """
-    if light['strobe_speed'] == 'random':
-        strobe_speed = np.random.randint(0, 255)
-    else:
-        strobe_speed = light['strobe_speed']
+    if light['speed'] == 'random':
+        speed = np.random.randint(0, 255)
 
     if light['brightness'] == 'random':
         brightness = np.random.randint(0, 255)
-    else:
-        brightness = light['brightness']
-    return [strobe_speed, brightness]
+
+    return [speed, brightness]
 
 def time_dimmer(light):
     """
@@ -202,24 +204,31 @@ def time_rgb(light):
     """
     Returns the DMX value for a time-based RGB light based on the current time in seconds. 
     """
-    amplitude = (light['max_brightness'] - light['min_brightness']) / 2
-    midpoint = (light['max_brightness'] + light['min_brightness']) / 2
+    min_brightness = light['min_brightness']
+    max_brightness = light['max_brightness']
+    range_brightness = max_brightness - min_brightness
+    
     if light['function'] == 'sine':
-        brightness = int(np.sin(time.time() * light['frequency']) * amplitude + midpoint)
+        brightness = int(min_brightness + range_brightness * (np.sin(time.time() * light['frequency']*2*pi) * 0.5 + 0.5))
     elif light['function'] == 'square':
-        brightness = int(np.sign(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+        brightness = int(min_brightness + range_brightness * (np.sign(np.sin(time.time() * light['frequency']*2*pi)) * 0.5 + 0.5))
     elif light['function'] == 'triangle':
-        brightness = int(np.abs(np.sin(time.time() * light['frequency'])) * amplitude + midpoint)
+        brightness = int(min_brightness + range_brightness * np.abs(((time.time() * light['frequency']) % 2) - 1))
     elif light['function'] == 'sawtooth_forward':
-        brightness = int((time.time() * light['frequency'] % 1) * amplitude + midpoint)
+        brightness = int(min_brightness + range_brightness * ((time.time() * light['frequency']) % 1))
     elif light['function'] == 'sawtooth_backward':
-        brightness = int((1 - time.time() * light['frequency'] % 1) * amplitude + midpoint)
+        brightness = int(min_brightness + range_brightness * (1 - (time.time() * light['frequency'] % 1)))
 
     if light['color'] == 'random':
-        color = random_color()
+        color = colors[random_color()]
     else:
         color = colors[light['color']]
-    return [brightness, color[0], color[1], color[2], 255 if light['strobe'] else 0, 0]
+
+    strobe = light.get('strobe', 0)
+    if strobe == 'random':
+        strobe = np.random.randint(0, 255)
+
+    return [brightness, color[0], color[1], color[2], strobe, 0]
 
 def time_strobe(light):
     """
@@ -293,7 +302,7 @@ if __name__ == '__main__':
     print('bool rgb:')
     print(bool_rgb({'brightness': 255, 'color': 'red', 'strobe': False}))
     print('bool strobe:')
-    print(bool_strobe({'strobe_speed': 255, 'brightness': 255}))
+    print(bool_strobe({'speed': 255, 'brightness': 255}))
     print('time dimmer:')
     print(time_dimmer({'min_brightness': 0, 'max_brightness': 255, 'frequency': 0.1, 'function': 'sine'}))
     print('time rgb:')
