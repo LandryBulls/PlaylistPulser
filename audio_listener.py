@@ -37,21 +37,21 @@ class AudioListener(threading.Thread):
         self.error_queue = queue.Queue()
         self.device_idx = get_blackhole_device_idx()
 
-    def run(self):
-        def audio_callback(indata, frames, time, status):
-            if status:
-                self.error_queue.put(f"Audio callback error: {status}")
-            try:
-                audio_data = np.copy(indata[:, 0])
-                fft_data = np.abs(np.fft.rfft(np.sum(indata, axis=1), n=None))
-                self.audio_queue.put(audio_data)
-                self.fft_queue.put(fft_data)
-            except Exception as e:
-                self.error_queue.put(f"Error processing audio data: {str(e)}")
+    def audio_callback(self, indata, frames, time, status):
+        if status:
+            self.error_queue.put(f"Audio callback error: {status}")
+        try:
+            audio_data = np.copy(indata[:, 0])
+            fft_data = np.abs(np.fft.rfft(np.sum(indata, axis=1), n=None))
+            self.audio_queue.put(audio_data)
+            self.fft_queue.put(fft_data)
+        except Exception as e:
+            self.error_queue.put(f"Error processing audio data: {str(e)}")
 
+    def run(self):
         self.running.set()
         try:
-            with sd.InputStream(callback=audio_callback, channels=self.channels, 
+            with sd.InputStream(callback=self.audio_callback, channels=self.channels, 
                                 samplerate=self.sample_rate, blocksize=self.block_size, device=self.device_idx):
                 while self.running.is_set():
                     sd.sleep(100)
@@ -96,6 +96,8 @@ def main():
             stdscr.addstr(0, 1, f"FFT Sum: {np.sum(fft_data)}")
             if fft_data is not None:
                 stdscr.addstr(1, 1, f'FFT Shape: {len(fft_data)}')
+            stdscr.addstr(2, 1, "Sample rate: {}".format(audio_listener.sample_rate))
+            stdscr.addstr(3, 1, "Block size: {}".format(audio_listener.block_size))
             stdscr.refresh()
 
             if errors:
